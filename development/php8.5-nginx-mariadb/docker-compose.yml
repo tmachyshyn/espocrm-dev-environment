@@ -1,0 +1,58 @@
+services:
+
+  espocrm-mariadb:
+    container_name: espocrm-mariadb
+    image: mariadb:latest
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 1
+    volumes:
+      - ./mariadb/data:/var/lib/mysql
+
+  espocrm-nginx:
+    image: nginx:latest
+    container_name: espocrm-nginx
+    volumes:
+      - ./html:/var/www/html
+      - ./logs:/var/log/nginx
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+      - ./nginx/espocrm.conf:/etc/nginx/espocrm.conf
+    restart: unless-stopped
+    ports:
+      - 8080:80
+
+  espocrm-php:
+   container_name: espocrm-php
+   build:
+     context: ./php
+     dockerfile: Dockerfile
+   volumes:
+    - ./html:/var/www/html
+   restart: unless-stopped
+   
+  espocrm-daemon:
+    container_name: espocrm-daemon
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    volumes:
+      - ./html:/var/www/html
+    restart: always
+    entrypoint: ["docker-daemon.sh"]
+
+  espocrm-websocket:
+    container_name: espocrm-websocket
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    environment:
+      ESPOCRM_CONFIG_USE_WEB_SOCKET: "true"
+      ESPOCRM_CONFIG_WEB_SOCKET_URL: "ws://localhost:8081"
+      ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBSCRIBER_DSN: "tcp://*:7777"
+      ESPOCRM_CONFIG_WEB_SOCKET_ZERO_M_Q_SUBMISSION_DSN: "tcp://espocrm-websocket:7777"
+    volumes:
+      - ./html:/var/www/html
+    restart: always
+    entrypoint: ["docker-websocket.sh"]
+    ports:
+      - 8081:8080
