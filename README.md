@@ -1,92 +1,92 @@
-# Sample of production/development environments for EspoCRM
+# EspoCRM Development Environments
 
-This repository contains examples of production and development environments for EspoCRM.
+This repository contains sample Docker development environments for EspoCRM with various PHP versions, web servers, and database configurations.
 
-## How to start
+## Quick Start
 
-1. Download the needed environment directory, ex. `php8.0-nginx-mysql`.
-2. Inside the downloaded directory run the command:
-
-```bash
-docker-compose up -d
-```
-
-3. Wait some time for deploying the containers.
-4. Download and extract EspoCRM files to the `html` directory.
-5. Visit `http://localhost:8080` and install EspoCRM.
-
-## Usage
-
-### Start
+1. Choose and download the desired environment directory (e.g., `php8.5-nginx-mariadb`).
+2. Navigate to the downloaded directory and run:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
-### Start with a build
+3. Wait for the containers to start and initialize.
+4. Download and extract EspoCRM files into the `html` directory.
+5. Open `http://localhost:8080` in your browser and complete the EspoCRM installation.
+
+## Docker Commands
+
+### Start containers
 
 ```bash
-docker-compose up -d --build "$@"
+docker compose up -d
 ```
 
-### Restart
+### Start with rebuild
 
 ```bash
-docker-compose restart
+docker compose up -d --build "$@"
 ```
 
-### Stop & remove
+### Restart containers
 
 ```bash
-docker-compose down
+docker compose restart
 ```
 
-### Status
+### Stop and remove containers
 
 ```bash
-docker-compose ps
+docker compose down
 ```
 
-### See logs
+### Check container status
 
 ```bash
-docker-compose logs
+docker compose ps
 ```
 
-## Database
+### View logs
+
+```bash
+docker compose logs
+```
+
+## Database Configuration
 
 ### MySQL
 
-Default connection information:
+Default connection credentials:
 
-- Host Name: `espocrm-mysql`
-- Database Name: `ANY`
-- User: `root`
-- Password: `1`
+- **Host Name**: `espocrm-mysql`
+- **Database Name**: Any name you choose
+- **User**: `root`
+- **Password**: `1`
 
 ### MariaDB
 
-Default connection information:
+Default connection credentials:
 
-- Host Name: `espocrm-mariadb`
-- Database Name: `ANY`
-- User: `root`
-- Password: `1`
+- **Host Name**: `espocrm-mariadb`
+- **Database Name**: Any name you choose
+- **User**: `root`
+- **Password**: `1`
 
 ### PostgreSQL
 
-Default connection information:
+Default connection credentials:
 
-- Host Name: `espocrm-postgres`
-- Database Name: `espocrm`
-- User: `espocrm`
-- Password: `espo_password`
+- **Host Name**: `espocrm-postgres`
+- **Database Name**: `espocrm`
+- **User**: `espocrm`
+- **Password**: `espo_password`
 
-### PhpMyAdmin
+### PhpMyAdmin Setup
 
-#### 1. Open a port for the container
+#### 1. Expose the MySQL port
 
-Edit the `docker-compose.yml`:
+Add a port mapping to `docker-compose.yml`:
 
 ```yaml
 espocrm-mysql:
@@ -95,9 +95,9 @@ espocrm-mysql:
       - 8033:3306
 ```
 
-#### 2. Modify phpMyAdmin configuration
+#### 2. Configure phpMyAdmin
 
-Edit the file `config.inc.php` under the phpMyAdmin directory:
+Edit the `config.inc.php` file in your phpMyAdmin directory:
 
 ```php
 $i++;
@@ -110,19 +110,23 @@ $cfg['Servers'][$i]['user'] = 'root';
 $cfg['Servers'][$i]['password'] = '';
 ```
 
-## Crontab
+## Cron Job Setup (optional)
 
-### Method 1: setup from the host
+By default, cron jobs are executed by the daemon container. If you need to run them from the host machine instead, follow the instructions below.
+
+### Configure from the host machine
+
+Add the following cron job to execute EspoCRM scheduled tasks every minute:
 
 ```bash
 * * * * * /usr/bin/docker exec --user www-data -i espocrm-php /bin/bash -c "cd /var/www/html; php cron.php" > /dev/null 2>&1
 ```
 
-## WebSocket
+## WebSocket Configuration
 
-#### 1. Add Websocket to your docker-compose file
+### 1. Add WebSocket service to Docker Compose
 
-Edit the `docker-compose.yml`:
+Add the following service definition to your `docker-compose.yml`:
 
 ```yaml
 espocrm-websocket:
@@ -136,9 +140,9 @@ espocrm-websocket:
       - 8081:8080
 ```
 
-#### 2. Add Websocket settings to your instance
+### 2. Configure EspoCRM for WebSocket
 
-In your `data/config.php` add:
+Add the following settings to your `data/config.php`:
 
 ```php
 'useWebSocket' => true,
@@ -147,29 +151,33 @@ In your `data/config.php` add:
 'webSocketZeroMQSubmissionDsn' => 'tcp://espocrm-websocket:7777',
 ```
 
-#### 3. Restart your container
+### 3. Restart the containers
 
-Inside your directory with `docker-composer.yml` file run the command:
-
-```bash
-sudo docker-compose down -v
-```
-
-Then:
+Stop and remove existing containers:
 
 ```bash
-sudo docker-compose up -d --build "$@"
+docker compose down -v
 ```
 
-## Run tests
+Rebuild and start the containers:
+
+```bash
+docker compose up -d --build "$@"
+```
+
+## Running Tests
 
 ### Unit tests
+
+Execute unit tests with the following command:
 
 ```bash
 /usr/bin/docker exec --user www-data phpunit --bootstrap vendor/autoload.php tests/unit
 ```
 
 ### Integration tests
+
+Execute integration tests with the following command:
 
 ```bash
 /usr/bin/docker exec --user www-data phpunit --bootstrap vendor/autoload.php tests/integration
